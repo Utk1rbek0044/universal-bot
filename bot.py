@@ -2,7 +2,7 @@ import os
 import logging
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
-import google.generativeai as genai
+from google import genai
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
@@ -12,8 +12,7 @@ BOT_TOKEN = os.environ.get("BOT_TOKEN")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 PORT = int(os.environ.get("PORT", 10000))
 
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-1.5-flash")
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 class SimpleHandler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -33,7 +32,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
     try:
-        response = model.generate_content(user_text)
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=user_text
+        )
         await update.message.reply_text(response.text)
     except Exception as e:
         await update.message.reply_text("Kechirasiz, xatolik yuz berdi. Qayta urinib ko'ring.")
